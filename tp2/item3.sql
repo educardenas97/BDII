@@ -11,23 +11,21 @@ SELECT
         CASE 
             WHEN CJ.NRO_CAJA = 2
                 THEN PO.IMPORTE_PAGO
-            ELSE 0
         END
     ) AS CAJA2,
     SUM(
         CASE 
             WHEN CJ.NRO_CAJA = 3
                 THEN PO.IMPORTE_PAGO
-            ELSE 0
         END
     ) AS CAJA3,
-    NVL(SUM(
+    SUM(
         CASE 
             WHEN CJ.NRO_CAJA = 4
                 THEN PO.IMPORTE_PAGO
             ELSE 0
         END
-    ) ,0 )AS CAJA4
+    ) AS CAJA4
 FROM D_FORMA_PAGO FP
 JOIN D_PAGO_OPERACION PO ON PO.COD_FORMA_PAGO = FP.COD_FORMA_PAGO
 JOIN D_MOVIMIENTO_OPERACIONES MVO ON MVO.ID_OPERACION = PO.ID_OPERACION
