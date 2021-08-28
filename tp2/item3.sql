@@ -1,8 +1,3 @@
-create materialized view <mview_name>
-refresh on demand 
-start with sysdate next sysdate + 1
--------
-
 -------
 SELECT TO_CHAR(ROUND(SYSDATE - 1 ) + 20/24,'MM-DD-YYYY HH24:MI:SS') AS CURRENT_HOUR FROM DUAL;
 ---------
