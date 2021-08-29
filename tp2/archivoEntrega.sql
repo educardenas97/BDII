@@ -243,13 +243,13 @@ CREATE MATERIALIZED VIEW mi_vista_materializada
 
 -- ENUNCIADO 4
 -- Item A
-SPOOL temp.sql;
+SPOOL temp0.sql;
 SELECT 'CREATE SYNONYM "' || SUBSTR(a.table_name, 3)  || '" FOR "' || a.owner || '"."' || a.table_name || '";'
 FROM   dba_tables a
 WHERE TABLESPACE_NAME ='BASECONTABLE'
 AND a.table_name LIKE 'D_%';
 SPOOL OFF;
-@temp.sql
+@temp0.sql
 
 --- Item B
 ALTER SESSION SET "_ORACLE_SCRIPT"=true;
@@ -257,12 +257,12 @@ CREATE ROLE R_CONS;
 ALTER SESSION SET "_ORACLE_SCRIPT"=false;
 
 --- Item D
-SPOOL temp.sql;
+SPOOL temp1.sql;
 SELECT 'GRANT SELECT ON ' || a.table_name  || ' TO R_CONS;'
 FROM   dba_tables a
 WHERE TABLESPACE_NAME ='BASECONTABLE'
 AND a.table_name LIKE 'D_%';
 SPOOL OFF;
-@temp.sql
+@temp1.sql
 --- Comprobación de que se han creado los roles
 SELECT TABLE_NAME, privilege FROM ROLE_TAB_PRIVS WHERE ROLE = 'R_CONS';
