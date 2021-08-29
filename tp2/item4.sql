@@ -1,3 +1,5 @@
+-- Enunciado 4
+-- Item A
 SPOOL temp.sql;
 SELECT 'CREATE SYNONYM "' || SUBSTR(a.table_name, 3)  || '" FOR "' || a.owner || '"."' || a.table_name || '";'
 FROM   dba_tables a
@@ -6,11 +8,12 @@ AND a.table_name LIKE 'D_%';
 SPOOL OFF;
 @temp.sql
 
---- ITEM B
-alter session set "_ORACLE_SCRIPT"=true;
+--- Item B
+ALTER SESSION SET "_ORACLE_SCRIPT"=true;
 CREATE ROLE R_CONS;
-alter session set "_ORACLE_SCRIPT"=false;
---- ITEM D
+ALTER SESSION SET "_ORACLE_SCRIPT"=false;
+
+--- Item D
 SPOOL temp.sql;
 SELECT 'GRANT SELECT ON ' || a.table_name  || ' TO R_CONS;'
 FROM   dba_tables a
@@ -20,13 +23,6 @@ SPOOL OFF;
 @temp.sql
 --- Comprobación de que se han creado los roles
 SELECT TABLE_NAME, privilege FROM ROLE_TAB_PRIVS WHERE ROLE = 'R_CONS';
-
----------------------------
-select owner, SUBSTR(table_name
-from dba_tables
-where TABLESPACE_NAME ='BASECONTABLE';
----------------------------
-
 
 
 
