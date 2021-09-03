@@ -37,7 +37,7 @@ BEGIN
             -- Select cantidad de compras
             SELECT 
                 id_producto,
-                max(cantidad)
+                sum(cantidad)
             INTO 
                 producto_id,
                 cantidad_compras
@@ -48,7 +48,7 @@ BEGIN
             GROUP BY 
                 id_producto
             ORDER BY 
-                max(cantidad) DESC
+                sum(cantidad) DESC
             fetch first 1 row only;
 
             -- Select descripcion del producto
@@ -86,7 +86,7 @@ BEGIN
             -- Select cantidad de ventas
             SELECT 
                 id_producto,
-                max(cantidad)
+                sum(cantidad)
             INTO 
                 producto_id,
                 cantidad_ventas
@@ -97,7 +97,7 @@ BEGIN
             GROUP BY 
                 id_producto
             ORDER BY 
-                max(cantidad) DESC
+                sum(cantidad) DESC
             fetch first 1 row only;
 
             -- Select descripcion del producto
