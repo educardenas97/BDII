@@ -1,4 +1,4 @@
--- Enunciado 1
+-- ENUNCIADO 1
 -- ITEM 1
 CREATE TABLESPACE BDHISTORICO
     DATAFILE 'C:\app\eduar\product\18.0.0\oradata\BDHISTORICO.dbf' SIZE 100M 

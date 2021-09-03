@@ -1,3 +1,4 @@
+-- ITEM 2.A
 BEGIN
     INSERT ALL
     WHEN tipo_operacion = 'COMPRA' THEN
