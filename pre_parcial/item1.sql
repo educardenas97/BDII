@@ -39,11 +39,17 @@ CREATE TABLE carreras (
                 nombre VARCHAR2(30) NOT NULL,
                 total_horas NUMBER(2) NOT NULL,
                 titulo_habilitante VARCHAR2(30) NOT NULL,
-                fecha_habilitacion DATE NOT NULL,
-                fecha_cancelacion DATE,
+                fecha_habilitacion DATE DEFAULT SYSDATE NOT NULL,
+                fecha_cancelacion DATE CHECK (fecha_cancelacion > fecha_habilitacion),
                 CONSTRAINT ID_CARRERA PRIMARY KEY (id)
 );
 
+COMMENT ON COLUMN carreras.id IS 'Identificación de la carrera'
+COMMENT ON COLUMN carreras.nombre IS 'Nombre de la Carrera'
+COMMENT ON COLUMN carreras.total_horas IS 'Total de horas de la carrera'
+COMMENT ON COLUMN carreras.titulo_habilitante IS 'Titulo habilitante de la carrera'
+COMMENT ON COLUMN carreras.fecha_habilitacion IS 'Fecha de habilitación de la carrera'
+COMMENT ON COLUMN carreras.fecha_cancelacion IS 'Fecha de cancelación de la carrera'
 
 CREATE SEQUENCE MATERIAS_ID_MATERIA_SEQ;
 
@@ -65,7 +71,7 @@ CREATE TABLE programa_curricular (
                 carga_horaria NUMBER(1) NOT NULL,
                 cant_creditos NUMBER(2) DEFAULT 6 NOT NULL
                 CHECK(
-                    BETWEEN 6 AND 12
+                    cant_creditos BETWEEN 6 AND 12
                 ),
                 CONSTRAINT PROGRAMA_CURRICULAR_PK PRIMARY KEY (id_materia, id)
 );
@@ -88,6 +94,12 @@ CREATE TABLE matricula (
                 id NUMBER NOT NULL,
                 seccion VARCHAR2(1) NOT NULL,
                 cedula NUMBER(8) NOT NULL,
+                motivo_cancelacion VARCHAR2(30),
+                fecha_inscripcion DATE DEFAULT SYSDATE NOT NULL,
+                fecha_fin_matricula DATE CHECK (
+                    fecha_fin_matricula > fecha_inscripcion 
+                    AND motivo_cancelacion IS NOT NULL
+                ),
                 CONSTRAINT ID_MATRICULA PRIMARY KEY (id_matricula)
 );
 
@@ -95,7 +107,10 @@ CREATE TABLE matricula (
 CREATE TABLE calificaciones (
                 numero_acta NUMBER(8) NOT NULL,
                 id_matricula NUMBER(8) NOT NULL,
-                puntaje NUMBER(3) NOT NULL,
+                puntaje NUMBER(3) NOT NULL
+                CHECK(
+                    puntaje BETWEEN 1 AND 100
+                ),
                 CONSTRAINT ID PRIMARY KEY (numero_acta, id_matricula)
 );
 
@@ -139,3 +154,4 @@ ALTER TABLE calificaciones ADD CONSTRAINT MATRICULA_CALIFICACIONES_FK
 FOREIGN KEY (id_matricula)
 REFERENCES matricula (id_matricula)
 NOT DEFERRABLE;
+ --

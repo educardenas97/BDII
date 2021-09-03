@@ -11,9 +11,9 @@ BEGIN
     -- Seleccionar anios de compras y ventas
     SELECT 
         nvl(min(compras.anio), 0),
-        nvl(max(compras.anio),0),
-        min(ventas.anio),
-        max(ventas.anio) 
+        nvl(max(compras.anio), 0),
+        nvl(min(ventas.anio), 0),
+        nvl(max(ventas.anio), 0) 
         INTO 
             pa_compras, 
             ua_compras, 
@@ -66,7 +66,7 @@ BEGIN
         EXCEPTION
             -- Si no hay compras para el anio
             WHEN no_data_found THEN 
-                dbms_output.put_line('No hubo compras en el año '||anio_actual); 
+                dbms_output.put_line('No hubo compras en el aÃ±o '||anio_actual); 
             WHEN others THEN 
                 dbms_output.put_line('Error!'); 
         END;
@@ -115,7 +115,7 @@ BEGIN
         EXCEPTION
             -- Si no hay ventas para el anio
             WHEN no_data_found THEN 
-                dbms_output.put_line('No hubo ventas en el año '||anio_actual); 
+                dbms_output.put_line('No hubo ventas en el aÃ±o '||anio_actual); 
             WHEN others THEN 
                 dbms_output.put_line('Error!'); 
         END;
