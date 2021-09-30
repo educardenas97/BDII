@@ -1,25 +1,3 @@
-/*
-a) El tipo tabla indexada T_DETALLE compuesto de los siguientes elementos:
- ID_PRODUCTO
- CANTIDAD
-*/
-DECLARE 
-    TYPE r_articulo IS RECORD (
-        ID_PRODUCTO D_DETALLE_OPERACIONES.ID_PRODUCTO%TYPE,
-        CANTIDAD D_DETALLE_OPERACIONES.CANTIDAD%TYPE
-    );
-    TYPE t_detalle IS TABLE OF
-       r_articulo INDEX BY BINARY_INTEGER;
-BEGIN
-
-END;
-    
-    
-/*
-b)  El procedimiento P_INSERTAR_MOVIMIENTO que recibe como parámetros:
-cod_sucursal, fecha_operacion, cod_operacion, id_persona, id_usuario,
-descripcion_operacion, nro_caja.
-*/
 CREATE OR REPLACE PROCEDURE P_INSERTAR_MOVIMIENTO(
     cod_sucursal IN D_MOVIMIENTO_OPERACIONES.cod_sucursal%TYPE, 
     fecha_operacion IN D_MOVIMIENTO_OPERACIONES.fecha_operacion%TYPE, 
@@ -45,13 +23,14 @@ IS
             Verificar el código de operación, si el código de operación es de uso cajero:
         */
     
-            SELECT OP.cod_operacion into v_codigo_operacion FROM D_OPERACIONES OP WHERE USO_CAJERO = 1 AND OP.cod_operacion = cod_operacion;
+            SELECT OP.cod_operacion into v_codigo_operacion FROM 
+                D_OPERACIONES OP WHERE USO_CAJERO = 1 AND OP.cod_operacion = cod_operacion fetch first  rows only;
 
             IF v_codigo_operacion IS NOT NULL THEN
             /*
                 Debe verificar que el nro de caja sea not null y corresponda a una caja existente.
             */
-                    SELECT C.NRO_CAJA into v_numero_caja FROM D_CAJAS C WHERE C.NRO_CAJA = NRO_CAJA;
+                    SELECT C.NRO_CAJA into v_numero_caja FROM D_CAJAS C WHERE C.NRO_CAJA = NRO_CAJA FETCH FIRST ROWS ONLY;
 
                 IF v_numero_caja IS NOT NULL THEN
             /*
@@ -107,11 +86,12 @@ IS
                 
                 UPDATE D_TIPO_COMPROBANTE_SECUENCIA SET NRO_COMPROBANTE_ACTUAL = NRO_COMPROBANTE_ACTUAL + 1
                             WHERE COD_TIPO_COMPROBANTE = (
-                                SELECT TCS.COD_TIPO_COMPROBANTE 
-                                FROM D_TIPO_COMPROBANTE_SECUENCIA TCS 
-                                JOIN D_TIPO_COMPROBANTE TC ON TC.COD_TIPO_COMPROBANTE = TCS.COD_TIPO_COMPROBANTE
-                                JOIN D_MOVIMIENTO_OPERACIONES DMO ON TC.COD_TIPO_COMPROBANTE = DMO.COD_TIPO_COMPROBANTE
-                                WHERE DMO.cod_operacion = cod_operacion AND ANHO = extract(year from SYSDATE)
+                                SELECT TCS.COD_TIPO_COMPROBANTE
+                                    FROM D_TIPO_COMPROBANTE_SECUENCIA TCS
+                                    JOIN D_TIPO_COMPROBANTE TC ON TC.COD_TIPO_COMPROBANTE = TCS.COD_TIPO_COMPROBANTE
+                                    JOIN D_MOVIMIENTO_OPERACIONES DMO ON TC.COD_TIPO_COMPROBANTE = DMO.COD_TIPO_COMPROBANTE
+                                      WHERE DMO.cod_operacion = cod_operacion AND ANHO = extract(year from SYSDATE)
+                                
                             ) AND ANHO = (
                                 SELECT TCS.ANHO 
                                 FROM D_TIPO_COMPROBANTE_SECUENCIA TCS 
@@ -126,36 +106,39 @@ IS
                 V_DESC_OPERACION := descripcion_operacion;
             END IF;
             INSERT INTO D_MOVIMIENTO_OPERACIONES (
+                ID_OPERACION,
                 fecha_operacion, 
                 cod_sucursal, 
                 cod_operacion, 
                 id_persona, 
                 nro_caja,
                 id_usuario,
+                cod_tipo_comprobante,
+                NRO_COMPROBANTE,
                 TIPO_REGISTRO,
                 DESCRIPCION_OPERACION,
+                NRO_TIMBRADO,
                 FECHA_INSERT
             ) VALUES(
+                (SELECT MAX(ID_OPERACION)+1 FROM D_MOVIMIENTO_OPERACIONES),
                 fecha_operacion,
                 cod_sucursal,
                 cod_operacion,
                 id_persona,
                 nro_caja,
                 id_usuario,
+                1,
+                V_NRO_COMPROBANTE,
                 'A',
                 V_DESC_OPERACION,
+                V_NRO_TIMBRADO,
                 SYSDATE
             );
         END IF;
         
     END;
-    
-
-
-    
-                
-                   
 
 
 
-    
+
+    EXECUTE P_INSERTAR_MOVIMIENTO(5, SYSDATE, 1, 7, 'CHIF', 'VENTA', 1);
