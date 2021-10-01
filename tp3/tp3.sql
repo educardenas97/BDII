@@ -181,7 +181,7 @@ CREATE OR REPLACE PROCEDURE P_ACTUALIZAR_STOCK(
 v_id_producto IN D_STOCK_SUCURSAL.ID_PRODUCTO%TYPE,
 v_cod_sucursal IN D_STOCK_SUCURSAL.COD_SUCURSAL%TYPE, 
 v_cantidad IN D_STOCK_SUCURSAL.CANTIDAD_EXISTENCIA%TYPE,
-v_uso_stock NUMBER
+v_uso_stock IN D_DETALLE_OPERACIONES.USO_STOCK%TYPE
 )
 IS
     BEGIN
@@ -199,6 +199,87 @@ IS
         END IF;
     END;
 
+    
+/*
+d) El procedimiento P_INSERTAR_DETALLE que recibe como parámetros: id_operacion,
+id_producto, cod_medida, cantidad_operacion.
+El procedimiento deberá:
+Recuperar la sucursal, el código de movimiento y el correspondiente uso_stock del
+mismo, a partir de la cabecera D_MOVIMIENTO_OPERACIONES.
+Insertar un registro en la tabla D_DETALLE_OPERACIONES asignando los siguientes
+campos:
+● precio_operacion = precio de última compra del producto + la aplicación del
+porcentaje de beneficio.
+● importe_operacion = precio_operacion x cantidad_operacion
+● cod_tipo_iva se obtiene a partir del producto
+● porcentaje_iva se obtiene a partir del tipo de iva
+● importe_iva = (precio_operacion x cantidad_operacion) / divisor_iva_incluido
+● importe_descuento e importe_recargo se asigna 0
+Actualizar el stock invocando al procedimiento P_ACTUALIZAR_STOCK, enviando los
+parámetros requeridos
+*/
 
+CREATE OR REPLACE PROCEDURE P_INSERTAR_DETALLE(
+    v_id_operacion IN D_MOVIMIENTO_OPERACIONES.ID_OPERACION%TYPE,
+    v_id_producto IN D_DETALLE_OPERACIONES.ID_PRODUCTO%TYPE, 
+    v_cod_medida IN D_DETALLE_OPERACIONES.COD_MEDIDA%TYPE, 
+    v_cantidad_operacion IN D_DETALLE_OPERACIONES.CANTIDAD_OPERACION%TYPE
+)
+IS
+    CURSOR C_DETALLE_INSERT IS
+        SELECT SUC.DESC_SUCURSAL, SUC.COD_SUCURSAL, DMO.ID_OPERACION, OP.USO_STOCK 
+        FROM D_MOVIMIENTO_OPERACIONES DMO 
+        JOIN D_SUCURSAL SUC ON DMO.COD_SUCURSAL = SUC.COD_SUCURSAL
+        JOIN D_OPERACIONES OP ON DMO.COD_OPERACION = OP.COD_OPERACION
+        WHERE DMO.ID_OPERACION = V_ID_OPERACION;
+    v_uso_stock  D_OPERACIONES.USO_STOCK%TYPE;
+    v_cod_sucursal  D_STOCK_SUCURSAL.COD_SUCURSAL%TYPE;
+    v_id_operacion_ D_DETALLE_OPERACIONES.ID_OPERACION%TYPE;
+    BEGIN
+        FOR REG IN C_DETALLE_INSERT LOOP
+            v_uso_stock := REG.USO_STOCK;
+            v_cod_sucursal := REG.COD_SUCURSAL;
+            v_id_operacion_ := REG.ID_OPERACION;
+        END LOOP;
+        INSERT INTO D_DETALLE_OPERACIONES (
+        ID_REGISTRO, 
+        ID_OPERACION, 
+        ID_PRODUCTO, 
+        COD_MEDIDA,
+        CANTIDAD_OPERACION, 
+        PRECIO_OPERACION, 
+        IMPORTE_OPERACION,
+        IMPORTE_DESCUENTO,
+        cod_tipo_iva,
+        porcentaje_iva,
+        importe_iva,
+        importe_recargo)
+        VALUES(
+            (SELECT MAX(ID_REGISTRO) +1 FROM D_DETALLE_OPERACIONES),
+            v_id_operacion_,
+            V_ID_PRODUCTO,
+            v_cod_medida,
+            v_cantidad_operacion,
+            (SELECT PRECIO_ULTIMA_COMPRA + PRECIO_ULTIMA_COMPRA * PORCENTAJE_BENEFICIO
+            FROM D_PRODUCTOS WHERE ID_PRODUCTO = V_ID_PRODUCTO),
+            (SELECT (PRECIO_ULTIMA_COMPRA + PRECIO_ULTIMA_COMPRA * PORCENTAJE_BENEFICIO) * v_cantidad_operacion 
+            FROM D_PRODUCTOS WHERE ID_PRODUCTO = V_ID_PRODUCTO),
+            0,
+           (SELECT I.COD_TIPO_IVA 
+           FROM D_TIPO_IVA I
+           JOIN D_PRODUCTOS P ON I.COD_TIPO_IVA = P.COD_TIPO_IVA
+           WHERE P.ID_PRODUCTO = V_ID_PRODUCTO) 
+            ,
+            (SELECT porcentaje_iva FROM D_TIPO_IVA I
+             JOIN D_PRODUCTOS P ON P.COD_TIPO_IVA = I.COD_TIPO_IVA
+             WHERE P.ID_PRODUCTO = V_ID_PRODUCTO),
+            (SELECT ((P.PRECIO_ULTIMA_COMPRA + P.PRECIO_ULTIMA_COMPRA * P.PORCENTAJE_BENEFICIO) * v_cantidad_operacion )/ I.divisor_iva_incluido
+            FROM D_PRODUCTOS P 
+            JOIN D_TIPO_IVA I ON I.COD_TIPO_IVA = P.COD_TIPO_IVA
+            WHERE P.ID_PRODUCTO = V_ID_PRODUCTO),
+            0
+        );
 
+        P_ACTUALIZAR_STOCK(V_ID_PRODUCTO, v_cod_sucursal, v_cantidad_operacion, V_USO_STOCK);
+    END;
     
