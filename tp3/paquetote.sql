@@ -26,7 +26,7 @@ a) El tipo tabla indexada T_DETALLE compuesto de los siguientes elementos:
     TYPE t_detalle IS TABLE OF
        r_articulo INDEX BY BINARY_INTEGER;
 
-    FUNCTION F_VER_DETALLE(ID_OPERACION IN NUMBER) RETURN T_DETALLE;
+    FUNCTION F_VER_DETALLE(ID_OPERACION IN D_MOVIMIENTO_OPERACIONES.ID_OPERACION%TYPE) RETURN T_DETALLE;
 
 END;
 
@@ -194,7 +194,7 @@ ID_PRODUCTO, y en la sucursal determinada por el COD_SUCURSAL. Ello siempre que 
     v_id_producto IN D_STOCK_SUCURSAL.ID_PRODUCTO%TYPE,
     v_cod_sucursal IN D_STOCK_SUCURSAL.COD_SUCURSAL%TYPE, 
     v_cantidad IN D_STOCK_SUCURSAL.CANTIDAD_EXISTENCIA%TYPE,
-    v_uso_stock IN D_DETALLE_OPERACIONES.USO_STOCK%TYPE
+    v_uso_stock IN D_OPERACIONES.USO_STOCK%TYPE
     )
     IS
         BEGIN
@@ -312,52 +312,45 @@ TYPE r_articulo IS RECORD (
        r_articulo INDEX BY BINARY_INTEGER;
 */
 
-    FUNCTION F_VER_DETALLE(ID_OPERACION IN NUMBER)
+    FUNCTION F_VER_DETALLE(ID_OPERACION IN D_MOVIMIENTO_OPERACIONES.ID_OPERACION%TYPE)
     RETURN T_DETALLE
     IS
-        V_EXISTE_OPERACION BOOLEAN;
-        V_EXISTE_MOVIMIENTO BOOLEAN;
+        CURSOR C_MOVIMIENTO IS 
+            SELECT ID_OPERACION 
+            FROM D_DETALLE_OPERACIONES 
+            WHERE D_DETALLE_OPERACIONES.ID_OPERACION = ID_OPERACION;
+        EXISTE BOOLEAN;
         V_INDICE NUMBER;
         V_DETALLE T_DETALLE;
-
-        CURSOR C_MOVIMIENTO IS 
-            SELECT ID_OPERACION, FECHA_OPERACION, COD_SUCURSAL 
-            FROM D_MOVIMIENTO_OPERACIONES 
-            WHERE D_MOVIMIENTO_OPERACIONES.ID_OPERACION = V_ID_OPERACION;
-        
+        CURSOR C_DETALLE IS
+            SELECT ID_PRODUCTO, CANTIDAD_OPERACION FROM D_DETALLE_OPERACIONES
+            WHERE D_DETALLE_OPERACIONES.ID_OPERACION = ID_OPERACION;
         BEGIN
-            V_EXISTE_MOVIMIENTO := FALSE;
-            V_EXISTE_OPERACION := FALSE;
-            
-            FOR R_MOVIMIENTO IN C_MOVIMIENTO LOOP
-                V_EXISTE_MOVIMIENTO := TRUE;
-                V_MOVIMIENTO(V_INDICE) := R_MOVIMIENTO.FECHA_OPERACION;
-                DBMS_OUTPUT.PUT_LINE(V_INDICE || ' - ' || V_MOVIMIENTO(V_INDICE));
-                V_INDICE := V_INDICE + 1;
+            EXISTE := FALSE;
+            V_INDICE := 0;
+            FOR REG_MOV IN C_MOVIMIENTO LOOP
+                IF ID_OPERACION = REG_MOV.ID_OPERACION THEN
+                    EXISTE := TRUE;
+                END IF;
             END LOOP;
-
-            IF V_EXISTE_MOVIMIENTO THEN
-                V_EXISTE_OPERACION := TRUE;
-            END IF;
-
-            IF V_EXISTE_OPERACION THEN
-                DBMS_OUTPUT.PUT_LINE('EXISTE OPERACION');
-                DECLARE
-                    CURSOR C_DETALLE IS
-                        SELECT ID_PRODUCTO, CANTIDAD_OPERACION FROM D_DETALLE_OPERACIONES
-                        WHERE D_DETALLE_OPERACIONES.ID_OPERACION = V_ID_OPERACION;
-                    BEGIN
-                        FOR R_DETALLE IN C_DETALLE LOOP
+            IF EXISTE = FALSE THEN
+                RAISE_APPLICATION_ERROR(-20001, 'No existe la operación');
+            ELSE 
+                 FOR R_DETALLE IN C_DETALLE LOOP
                             V_DETALLE(V_INDICE).ID_PRODUCTO := R_DETALLE.ID_PRODUCTO;
                             V_DETALLE(V_INDICE).CANTIDAD := R_DETALLE.CANTIDAD_OPERACION;
                             V_INDICE := V_INDICE + 1;
                             -- Para ver lo que se carga
                             DBMS_OUTPUT.PUT_LINE(R_DETALLE.ID_PRODUCTO || ' - ' || R_DETALLE.CANTIDAD_OPERACION);
-                        END LOOP;
+                END LOOP;
                     RETURN V_DETALLE;
-                    END;
-            ELSE
-                RAISE_APPLICATION_ERROR(-20001, 'No existe la operación');
             END IF;
         END;
-    END;
+END;
+
+DECLARE
+ V_PRUEBA PCK_PUNTO_VENTA.T_DETALLE;
+ 
+BEGIN
+    V_PRUEBA := PCK_PUNTO_VENTA.F_VER_DETALLE(1);
+END;
