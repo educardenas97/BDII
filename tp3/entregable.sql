@@ -305,14 +305,6 @@ IS
     existe, dará error.
     • Si existe, recorrerá los movimientos de detalle y llenará una variable del tipo T_DETALLE,
     la que será retornada.
-
-
-    TYPE r_articulo IS RECORD (
-            ID_PRODUCTO D_DETALLE_OPERACIONES.ID_PRODUCTO%TYPE,
-            CANTIDAD D_DETALLE_OPERACIONES.CANTIDAD%TYPE
-        );
-        TYPE t_detalle IS TABLE OF
-        r_articulo INDEX BY BINARY_INTEGER;
     */
     FUNCTION F_VER_DETALLE(ID_OPERACION IN D_MOVIMIENTO_OPERACIONES.ID_OPERACION%TYPE)
     RETURN T_DETALLE
@@ -346,13 +338,4 @@ IS
                     RETURN V_DETALLE;
             END IF;
         END;
-END;
-
-
--- Prueba
-DECLARE
- V_PRUEBA PCK_PUNTO_VENTA.T_DETALLE;
- 
-BEGIN
-    V_PRUEBA := PCK_PUNTO_VENTA.F_VER_DETALLE(1);
 END;
