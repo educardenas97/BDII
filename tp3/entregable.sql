@@ -99,6 +99,7 @@ IS
                     */
                         UPDATE D_TIMBRADO SET NUMERO_ACTUAL_FACTURA = NUMERO_ACTUAL_FACTURA + 1
                             WHERE NRO_TIMBRADO = V_NRO_TIMBRADO AND NUMERO_ACTUAL_FACTURA <= HASTA_NUMERO_FACTURA;
+                        COMMIT;
                     EXCEPTION
                      WHEN NO_DATA_FOUND THEN
                         DBMS_OUTPUT.PUT_LINE('Ocurrio un error');
@@ -135,6 +136,7 @@ IS
                                 JOIN D_MOVIMIENTO_OPERACIONES DMO ON TC.COD_TIPO_COMPROBANTE = DMO.COD_TIPO_COMPROBANTE
                                 WHERE DMO.cod_operacion = cod_operacion AND ANHO = extract(year from SYSDATE)
                             );
+                COMMIT;
             END IF;
             IF descripcion_operacion IS NULL THEN
                SELECT DESC_OPERACION INTO V_DESC_OPERACION FROM D_OPERACIONES OP WHERE OP.COD_OPERACION = cod_operacion;
@@ -170,7 +172,7 @@ IS
                 V_NRO_TIMBRADO,
                 SYSDATE
             );
-
+            COMMIT;
         ELSE
             DBMS_OUTPUT.PUT_LINE('FECHA INCORRECTA');
         END IF;
@@ -203,11 +205,13 @@ IS
                 UPDATE D_STOCK_SUCURSAL SET CANTIDAD_EXISTENCIA = CANTIDAD_EXISTENCIA + V_CANTIDAD
                 WHERE ID_PRODUCTO = V_ID_PRODUCTO 
                 AND COD_SUCURSAL = v_cod_sucursal;
+                COMMIT;
             ELSIF V_USO_STOCK = 1 THEN
                 UPDATE D_STOCK_SUCURSAL SET CANTIDAD_EXISTENCIA = CANTIDAD_EXISTENCIA - V_CANTIDAD
                 WHERE ID_PRODUCTO = V_ID_PRODUCTO 
                 AND COD_SUCURSAL = v_cod_sucursal   
                 AND (CANTIDAD_EXISTENCIA - V_CANTIDAD) >= STOCK_MINIMO; 
+                COMMIT;
             ELSE
                 DBMS_OUTPUT.PUT_LINE('***USO STOCK NO VALIDO***');
             END IF;
@@ -293,7 +297,7 @@ IS
                 WHERE P.ID_PRODUCTO = V_ID_PRODUCTO),
                 0
             );
-
+            COMMIT;
             P_ACTUALIZAR_STOCK(V_ID_PRODUCTO, v_cod_sucursal, v_cantidad_operacion, V_USO_STOCK);
     END;
 
