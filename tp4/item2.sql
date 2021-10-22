@@ -21,9 +21,9 @@ que conforma la PK. Si la PK está conformada por varias columnas, las
 mismas irán entre comas
 */
 
-CREATE OR REPLACE
-PROCEDURE P_GENERAR_TRIGGERS
-IS
+EXECUTE P_GENERAR_TRIGGERS;
+
+CREATE OR REPLACE PROCEDURE P_GENERAR_TRIGGERS IS
 
 TYPE T_CUR IS REF CURSOR;
 
@@ -32,14 +32,15 @@ TYPE R_TAB IS RECORD(
     NOMBRE_PK VARCHAR2(200)
 );
 
-TYPE T_TAB IS TABLE OF R_TAB INDEX BY BINARY_INTEGER;
+TYPE T_TAB IS TABLE OF 
+    R_TAB INDEX BY BINARY_INTEGER;
 
 V_TAB T_TAB;
 V_CUR T_CUR;
-ind number;
+ind NUMBER;
+v_tablas VARCHAR2(200);
 BEGIN
-    OPEN V_CUR FOR
-        'SELECT cols.table_name, cols.column_name
+    v_tablas := 'SELECT cols.table_name, cols.column_name
             FROM all_constraints cons, all_cons_columns cols
             WHERE cols.table_name in (SELECT TABLE_NAME
                             FROM   ALL_TABLES
@@ -48,7 +49,8 @@ BEGIN
             AND cons.constraint_type = ' || 'P' || '
             AND cons.constraint_name = cols.constraint_name
             AND cons.owner = cols.owner
-            ORDER BY cols.table_name ASC;';
+            ORDER BY cols.table_name ASC';
+    OPEN V_CUR FOR v_tablas;
     FETCH V_CUR BULK COLLECT INTO V_TAB;
     CLOSE V_CUR;
     ind := v_tab.FIRST;
@@ -59,7 +61,7 @@ BEGIN
             IF v_tab(ind).NOMBRE_TABLA = v_tab(ind-1).NOMBRE_TABLA THEN
                 v_tab(ind).NOMBRE_PK := v_tab(ind-1).NOMBRE_PK || ', ' || v_tab(ind).NOMBRE_PK;
             ELSE
-              EXCECUTE IMMEDIATE 'BEGIN GENERAR_SENTENCIAS_DML('||TO_CHAR(v_tab(ind).NOMBRE_TABLA)||', '||TO_CHAR(v_tab(ind).NOMBRE_PK))'||; END;';
+                GENERAR_SENTENCIAS_DML(v_tab(ind).NOMBRE_TABLA, v_tab(ind).NOMBRE_PK);
             END IF;
         END IF;
         ind := v_tab.NEXT(ind);
@@ -93,6 +95,7 @@ BEGIN
             VALUES(TO_DATE(sysdate,'||'yyyy-mm-dd hh24:mi:ss'||'), OPERACION, ' || NOMBRE_TABLA ||', ' || CLAVE_PK ||', (select user from dual)  )
     END;
     ';  
+    EXECUTE IMMEDIATE sentencia_trigger ;
 END;
 /
 ------
@@ -154,3 +157,8 @@ AND cons.constraint_type = 'P'
 AND cons.constraint_name = cols.constraint_name
 AND cons.owner = cols.owner;
 
+select trigger_name, trigger_type,
+    triggering_event, table_name,
+    status, trigger_body
+from ALL_TRIGGERS
+WHERE OWNER='BASEDATOS2';
