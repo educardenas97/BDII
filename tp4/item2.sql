@@ -82,13 +82,13 @@ CREATE OR REPLACE PROCEDURE GENERAR_SENTENCIAS_DML
 (
     NOMBRE_TABLA IN VARCHAR2,
     CLAVE_PK IN VARCHAR2
-) IS
+) AUTHID CURRENT_USER IS
     sentencia_trigger VARCHAR2(2000);
     --nombre_tabla = 'D_DETALLE_OPERACIONES';
 BEGIN
     sentencia_trigger := '
-    CREATE OR REPLACE TRIGGER T_'||q'['NOMBRE_TABLA']' || '
-    BEFORE INSERT OR UPDATE OR DELETE ON '|| q'['NOMBRE_TABLA']' || '
+    CREATE OR REPLACE TRIGGER T_'||NOMBRE_TABLA|| '
+    BEFORE INSERT OR UPDATE OR DELETE ON '||NOMBRE_TABLA|| '
     DECLARE
         OPERACION VARCHAR2;
     BEGIN
@@ -100,8 +100,8 @@ BEGIN
             OPERACION = ' || q'['BORRADO']' || ';
         END IF;
         INSERT INTO LOG_TABLAS(FECHA_HORA, OPERACION, NOMBRE_TABLA, CLAVE, USUARIO)
-            VALUES(CURRENT_TIMESTAMP, OPERACION, ' || NOMBRE_TABLA ||', ' || CLAVE_PK ||', (select user from dual)  );
-    END T_' || NOMBRE_TABLA || ';
+            VALUES(CURRENT_TIMESTAMP, OPERACION, ' ||NOMBRE_TABLA||', ' ||CLAVE_PK||', (select user from dual)  );
+    END T_' ||NOMBRE_TABLA|| ';
     ';  
     EXECUTE IMMEDIATE sentencia_trigger ;
 END;
@@ -202,3 +202,38 @@ begin
     EXECUTE IMMEDIATE v_sentencia; exception when others then DBMS_OUTPUT.PUT_LINE('Ocurrio un error inesperado '|| sqlerrm); 
 end;
 
+
+DECLARE --funcion anonima
+
+--creamos un cursor para almacenar los nombres  de las tablas
+cursor c_tablas is 
+    select object_name TABLAS From user_objects Where object_type = 'TABLE';
+
+v_sentencia varchar2(5000);
+
+begin
+
+--recorremos el cursor
+for t_tabla in c_tablas  loop
+    --creamos la sentencia para cada tabla
+    v_sentencia := t_tabla.tablas||'
+    after insert or delete or update on '|| t_tabla.tablas ||
+    ' for each row '|| 
+    'declare '||q'[
+    BEGIN  
+            if INSERTING THEN 
+                DBMS_OUTPUT.PUT_LINE('Esta insertando');
+            
+            end if; 
+            if DELETING THEN    
+                DBMS_OUTPUT.PUT_LINE('Esta eliminando');
+            end if; 
+    END]';
+    
+    DBMS_OUTPUT.PUT_LINE(''||v_sentencia);
+
+--ejecutamos la sentencia para cada tabla    
+execute IMMEDIATE 'CREATE OR REPLACE TRIGGER t_'|| v_sentencia;
+end loop;
+    
+end;
