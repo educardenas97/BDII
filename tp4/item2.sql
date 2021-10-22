@@ -75,7 +75,7 @@ BEGIN
         ind := v_tab.NEXT(ind);
     END LOOP;    
 END;
-
+/
 
 ------ Sentencia para triggers
 CREATE OR REPLACE PROCEDURE GENERAR_SENTENCIAS_DML
@@ -87,25 +87,26 @@ CREATE OR REPLACE PROCEDURE GENERAR_SENTENCIAS_DML
     --nombre_tabla = 'D_DETALLE_OPERACIONES';
 BEGIN
     sentencia_trigger := '
-    CREATE OR REPLACE TRIGGER T_' || NOMBRE_TABLA ||'
-    AFTER INSERT OR UPDATE OR DELETE ON ' || NOMBRE_TABLA ||'
+    CREATE OR REPLACE TRIGGER T_' || NOMBRE_TABLA || '
+    AFTER INSERT OR UPDATE OR DELETE ON ' || NOMBRE_TABLA || '
     DECLARE
         OPERACION VARCHAR2;
     BEGIN
         IF INSERTING THEN
             OPERACION = ' || q'['INSERTAR']' || ';
         ELSIF UPDATING THEN
-            OPERACION = ' || q'['ACTUALIZAR']' || '
+            OPERACION = ' || q'['ACTUALIZAR']' || ';
         ELSIF DELETING THEN
-            OPERACION = ' || q'['BORRADO']' || '
+            OPERACION = ' || q'['BORRADO']' || ';
         END IF;
-            INSERT INTO LOG_TABLAS
-            VALUES(TO_DATE(sysdate,'||'yyyy-mm-dd hh24:mi:ss'||'), OPERACION, ' || NOMBRE_TABLA ||', ' || CLAVE_PK ||', (select user from dual)  )
+        INSERT INTO LOG_TABLAS(FECHA_HORA, OPERACION, NOMBRE_TABLA, CLAVE, USUARIO)
+            VALUES(CURRENT_TIMESTAMP, OPERACION, ' || NOMBRE_TABLA ||', ' || CLAVE_PK ||', (select user from dual)  );
     END;
     ';  
     EXECUTE IMMEDIATE sentencia_trigger ;
 END;
 /
+
 ------
 
 -- ejemplo de sql dinamico
