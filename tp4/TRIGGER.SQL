@@ -22,9 +22,9 @@ BEGIN
             FROM all_constraints cons, all_cons_columns cols
             WHERE cols.table_name in (SELECT T.TABLE_NAME
                             FROM   ALL_TABLES T
-                            WHERE  T.OWNER = ' || V_USER ||'
-                            AND T.TABLE_NAME LIKE SUBSTR(T.TABLE_NAME, 2))
-            AND cons.constraint_type = ' || V_CONST ||'
+                            WHERE  T.OWNER = ' || q'['BASEDATOS2']' || '
+                            AND T.TABLE_NAME LIKE ' || q'['D_%']' || ')
+            AND cons.constraint_type =  ' || q'['P']' || '
             AND cons.constraint_name = cols.constraint_name
             AND cons.owner = cols.owner
             ORDER BY cols.table_name ASC';

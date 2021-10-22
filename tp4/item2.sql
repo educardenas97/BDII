@@ -47,9 +47,9 @@ BEGIN
             FROM all_constraints cons, all_cons_columns cols
             WHERE cols.table_name in (SELECT T.TABLE_NAME
                             FROM   ALL_TABLES T
-                            WHERE  T.OWNER  IN (SELECT USER FROM DUAL)
-                            AND T.TABLE_NAME LIKE SUBSTR(T.TABLE_NAME, 2))
-            AND cons.constraint_type =  CHR(80)
+                            WHERE  T.OWNER = ' || q'['BASEDATOS2']' || '
+                            AND T.TABLE_NAME LIKE ' || q'['D_%']' || ')
+            AND cons.constraint_type =  ' || q'['P']' || '
             AND cons.constraint_name = cols.constraint_name
             AND cons.owner = cols.owner
             ORDER BY cols.table_name ASC';
@@ -88,16 +88,16 @@ CREATE OR REPLACE PROCEDURE GENERAR_SENTENCIAS_DML
 BEGIN
     sentencia_trigger := '
     CREATE OR REPLACE TRIGGER T_' || NOMBRE_TABLA ||'
-    AFTER INSERT OR UPDATE OR DELETE ON V_TAB(IND).NOMBRE_TABLA
+    AFTER INSERT OR UPDATE OR DELETE ON ' || NOMBRE_TABLA ||'
     DECLARE
         OPERACION VARCHAR2;
     BEGIN
         IF INSERTING THEN
-            OPERACION = ' || 'INSERT' ||'
+            OPERACION = ' || q'['INSERTAR']' || ';
         ELSIF UPDATING THEN
-            OPERACION = '|| 'UPDATE' ||'
+            OPERACION = ' || q'['ACTUALIZAR']' || '
         ELSIF DELETING THEN
-            OPERACION = '|| 'DELETE' ||'
+            OPERACION = ' || q'['BORRADO']' || '
         END IF;
             INSERT INTO LOG_TABLAS
             VALUES(TO_DATE(sysdate,'||'yyyy-mm-dd hh24:mi:ss'||'), OPERACION, ' || NOMBRE_TABLA ||', ' || CLAVE_PK ||', (select user from dual)  )
