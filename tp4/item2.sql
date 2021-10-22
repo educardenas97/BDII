@@ -38,21 +38,29 @@ TYPE T_TAB IS TABLE OF
 V_TAB T_TAB;
 V_CUR T_CUR;
 ind NUMBER;
-v_tablas VARCHAR2(200);
+v_tablas VARCHAR2(2000);
+V_USER VARCHAR2(20) := 'BASEDATOS2';
+V_LIKE VARCHAR2 (20):= 'D_%';
+V_CONST VARCHAR2 (20):= 'P';
 BEGIN
     v_tablas := 'SELECT cols.table_name, cols.column_name
             FROM all_constraints cons, all_cons_columns cols
-            WHERE cols.table_name in (SELECT TABLE_NAME
-                            FROM   ALL_TABLES
-                            WHERE  OWNER = ' || 'BASEDATOS2' || '
-                            AND TABLE_NAME LIKE ' || 'D_%' || ')
-            AND cons.constraint_type = ' || 'P' || '
+            WHERE cols.table_name in (SELECT T.TABLE_NAME
+                            FROM   ALL_TABLES T
+                            WHERE  T.OWNER  IN (SELECT USER FROM DUAL)
+                            AND T.TABLE_NAME LIKE SUBSTR(T.TABLE_NAME, 2))
+            AND cons.constraint_type =  CHR(80)
             AND cons.constraint_name = cols.constraint_name
             AND cons.owner = cols.owner
             ORDER BY cols.table_name ASC';
+    EXECUTE IMMEDIATE v_tablas
+    BULK COLLECT INTO V_TAB;
+
+    /*
     OPEN V_CUR FOR v_tablas;
     FETCH V_CUR BULK COLLECT INTO V_TAB;
     CLOSE V_CUR;
+    */
     ind := v_tab.FIRST;
     WHILE ind <= v_tab.LAST LOOP
         -- si el registro es igual al anterior, concatenar el nombre de la columna
@@ -111,10 +119,10 @@ BEGIN
         C_TABLAS IS
             SELECT cols.table_name, cols.column_name, cols.owner
             FROM all_constraints cons, all_cons_columns cols
-            WHERE cols.table_name in (SELECT TABLE_NAME
-                            FROM   ALL_TABLES
-                            WHERE  OWNER = 'BASEDATOS2'
-                            AND TABLE_NAME LIKE 'D_%')
+            WHERE cols.table_name in (SELECT T.TABLE_NAME
+                            FROM   ALL_TABLES T
+                            WHERE  T.OWNER = 'BASEDATOS2'
+                            AND T.TABLE_NAME LIKE 'D_%')
             AND cons.constraint_type = 'P'
             AND cons.constraint_name = cols.constraint_name
             AND cons.owner = cols.owner
