@@ -25,23 +25,23 @@ EXECUTE P_GENERAR_TRIGGERS;
 
 CREATE OR REPLACE PROCEDURE P_GENERAR_TRIGGERS IS
 
-TYPE T_CUR IS REF CURSOR;
+    TYPE T_CUR IS REF CURSOR;
 
-TYPE R_TAB IS RECORD(
-    NOMBRE_TABLA VARCHAR2(200),
-    NOMBRE_PK VARCHAR2(200)
-);
+    TYPE R_TAB IS RECORD(
+        NOMBRE_TABLA VARCHAR2(200),
+        NOMBRE_PK VARCHAR2(200)
+    );
 
-TYPE T_TAB IS TABLE OF 
-    R_TAB INDEX BY BINARY_INTEGER;
+    TYPE T_TAB IS TABLE OF 
+        R_TAB INDEX BY BINARY_INTEGER;
 
-V_TAB T_TAB;
-V_CUR T_CUR;
-ind NUMBER;
-v_tablas VARCHAR2(2000);
-V_USER VARCHAR2(20) := 'BASEDATOS2';
-V_LIKE VARCHAR2 (20):= 'D_%';
-V_CONST VARCHAR2 (20):= 'P';
+    V_TAB T_TAB;
+    V_CUR T_CUR;
+    ind NUMBER;
+    v_tablas VARCHAR2(2000);
+    V_USER VARCHAR2(20) := 'BASEDATOS2';
+    V_LIKE VARCHAR2 (20):= 'D_%';
+    V_CONST VARCHAR2 (20):= 'P';
 BEGIN
     v_tablas := 'SELECT cols.table_name, cols.column_name
             FROM all_constraints cons, all_cons_columns cols
@@ -87,8 +87,8 @@ CREATE OR REPLACE PROCEDURE GENERAR_SENTENCIAS_DML
     --nombre_tabla = 'D_DETALLE_OPERACIONES';
 BEGIN
     sentencia_trigger := '
-    CREATE OR REPLACE TRIGGER T_' || NOMBRE_TABLA || '
-    AFTER INSERT OR UPDATE OR DELETE ON ' || NOMBRE_TABLA || '
+    CREATE OR REPLACE TRIGGER T_'||q'['NOMBRE_TABLA']' || '
+    BEFORE INSERT OR UPDATE OR DELETE ON '|| q'['NOMBRE_TABLA']' || '
     DECLARE
         OPERACION VARCHAR2;
     BEGIN
@@ -101,7 +101,7 @@ BEGIN
         END IF;
         INSERT INTO LOG_TABLAS(FECHA_HORA, OPERACION, NOMBRE_TABLA, CLAVE, USUARIO)
             VALUES(CURRENT_TIMESTAMP, OPERACION, ' || NOMBRE_TABLA ||', ' || CLAVE_PK ||', (select user from dual)  );
-    END;
+    END T_' || NOMBRE_TABLA || ';
     ';  
     EXECUTE IMMEDIATE sentencia_trigger ;
 END;
@@ -171,3 +171,34 @@ select trigger_name, trigger_type,
     status, trigger_body
 from ALL_TRIGGERS
 WHERE OWNER='BASEDATOS2';
+select trigger_name
+from ALL_TRIGGERS
+WHERE OWNER='BASEDATOS2';
+
+
+
+-----
+create or replace procedure p_generar_triggers is 
+    tabla VARCHAR2(10) := 'b_areas'; 
+    encabezado VARCHAR2(100) := 'create trigger t_'; 
+    v_sentencia VARCHAR2( 8000) ; 
+    v_event VARCHAR2(1000) := ' after insert or update or delete on '; 
+    v_body varchar2(1000);
+
+begin 
+    encabezado := encabezado || tabla; 
+    v_event := v_event || tabla; 
+    v_body := q'[ for each row 
+                    declare 
+                    begin 
+                        if INSERTING then 
+                            DBMS_OUTPUT.PUT_LINE('Todo ok'); 
+                        end if; 
+                    end ]'; 
+    v_sentencia := encabezado ||v_event||v_body; 
+    DBMS_OUTPUT.PUT_LINE(v_sentencia); 
+    DBMS_OUTPUT.PUT_LINE(' ');
+
+    EXECUTE IMMEDIATE v_sentencia; exception when others then DBMS_OUTPUT.PUT_LINE('Ocurrio un error inesperado '|| sqlerrm); 
+end;
+
