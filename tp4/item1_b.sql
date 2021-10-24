@@ -25,21 +25,16 @@ BEGIN
     --   id_operacion
     consulta_detalles := 'SELECT * 
     FROM D_DETALLE_OPERACIONES
-    WHERE id_operacion = :1';
+    ';
     
     EXECUTE IMMEDIATE consulta_detalles 
     BULK COLLECT INTO v_detalle_operaciones
-    USING v_id_pago_operacion; -- id operacion
+    ; -- id operacion
 
     i := v_detalle_operaciones.FIRST;
     WHILE i <= v_detalle_operaciones.LAST
         LOOP -- Se recorre el cursor de detalle_operaciones
-            DBMS_OUTPUT.PUT_LINE('- Detalle operacion ------- id: ' || v_id_pago_operacion);
-            DBMS_OUTPUT.PUT_LINE('ID Detalle: '||v_detalle_operaciones(i).id_registro);
-            DBMS_OUTPUT.PUT_LINE('ID producto: '||v_detalle_operaciones(i).id_producto);
-            DBMS_OUTPUT.PUT_LINE('Cod medida: '||v_detalle_operaciones(i).cod_medida);
-            DBMS_OUTPUT.PUT_LINE('---------------------------');
-
+           
             -- Obtener precio de producto
             -- parametros:
             --  id_producto
@@ -49,29 +44,30 @@ BEGIN
             consulta_productos := 'SELECT *
             FROM d_productos_medida_precio m
             WHERE m.id_producto = :1
-                AND m.cod_medida = :2
-                AND m.cod_forma_pago = :3
-                AND m.cod_sucursal = (
-                            SELECT cod_sucursal FROM d_movimiento_operaciones
-                            WHERE id_operacion = :4
-                        )';
+                AND m.cod_medida = :2';
                 
             EXECUTE IMMEDIATE consulta_productos  
             BULK COLLECT INTO v_productos_medida_precio
                     USING v_detalle_operaciones(i).id_producto, 
-                    v_detalle_operaciones(i).cod_medida,
-                    v_id_forma_pago, 
-                    v_id_pago_operacion;
+                    v_detalle_operaciones(i).cod_medida;
 
             j := v_productos_medida_precio.FIRST;
             WHILE j <= v_productos_medida_precio.LAST LOOP -- Se recorre el cursor de productos_medida_precio
-                DBMS_OUTPUT.PUT_LINE('----'||v_productos_medida_precio(j).id_producto);
+                DBMS_OUTPUT.PUT_LINE('- Detalle operacion ------- id: ' || v_id_pago_operacion);
+                DBMS_OUTPUT.PUT_LINE('ID Detalle: '||v_detalle_operaciones(i).id_registro);
+                DBMS_OUTPUT.PUT_LINE('ID producto: '||v_detalle_operaciones(i).id_producto);
+                DBMS_OUTPUT.PUT_LINE('Cod medida: '||v_detalle_operaciones(i).cod_medida);
+
+
+                DBMS_OUTPUT.PUT_LINE('------producto_medida_precio------');
+                DBMS_OUTPUT.PUT_LINE('--- Precio: '||v_productos_medida_precio(j).id_producto);
+                DBMS_OUTPUT.PUT_LINE('--- Sucursal: '||v_productos_medida_precio(j).cod_sucursal);
+                DBMS_OUTPUT.PUT_LINE('--- Forma pago: '||v_productos_medida_precio(j).cod_forma_pago);
+                DBMS_OUTPUT.PUT_LINE('--- ID producto: '||v_productos_medida_precio(j).id_producto);
+                DBMS_OUTPUT.PUT_LINE('---------------------------');
+
                 j:= v_productos_medida_precio.NEXT(j);
             END LOOP; 
-        
-        i:= v_detalle_operaciones.NEXT(i);
+            i:= v_detalle_operaciones.NEXT(i);
         END LOOP;
-END;        
-            
-            
-        
+END;
