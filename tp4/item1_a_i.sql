@@ -16,4 +16,3 @@ CREATE OR REPLACE TRIGGER item1_a
         END IF;
 
 END item1_a;
-/
