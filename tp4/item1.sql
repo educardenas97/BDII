@@ -26,7 +26,7 @@ CREATE OR REPLACE TRIGGER item1
                         AND m.cod_forma_pago = v_id_forma_pago
                         AND m.cod_sucursal = (
                             SELECT cod_sucursal FROM d_movimiento_operaciones
-                            WHERE id_operacion = v_id_pago_operacion)
+                            WHERE id_operacion = v_id_pago_operacion
                         );
 
                 v_precio_operacion float;
