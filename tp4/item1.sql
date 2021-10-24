@@ -45,20 +45,20 @@ CREATE OR REPLACE TRIGGER item1
             BEGIN
                 v_precio_operacion := c_precio_venta.precio_venta;
 
-                -- Porcentaje descuento
+                -- Porcentaje descuento - ok
                 SELECT porcentaje_descuento INTO v_porcentaje_descuento 
                     FROM d_forma_pago WHERE cod_forma_pago = v_id_forma_pago;
                 v_importe_descuento := (v_precio_operacion * registro.cantidad_producto) * (v_porcentaje_descuento)/100;
 
-                -- Porcentaje recargo                
+                -- Porcentaje recargo - ok                
                 SELECT porcentaje_recargo INTO v_porcentaje_recargo
                     FROM d_forma_pago WHERE cod_forma_pago = v_id_forma_pago;
                 v_importe_recargo := (v_precio_operacion * registro.cantidad_producto) * (v_porcentaje_recargo)/100;
                 
-                -- Importe operación
+                -- Importe operación - ok
                 v_importe_operacion := v_precio_operacion * registro.cantidad_producto;
 
-                -- Importe IVA
+                -- Importe IVA - ok
                 SELECT divisor_iva_incluido INTO v_divisor_iva
                     FROM d_tipo_iva WHERE cod_tipo_iva = registro.cod_tipo_iva;
                 v_importe_iva := (v_importe_operacion - v_importe_descuento + v_importe_recargo) / v_divisor_iva;
