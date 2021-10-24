@@ -118,7 +118,9 @@ BEGIN
     EXECUTE IMMEDIATE '
     DECLARE
         C_TABLAS IS
-            SELECT cols.table_name, cols.column_name, cols.owner
+            SELECT cols.table_name, LISTAGG( cols.column_name, ',') 
+                                        WITHIN GROUP(
+                                        ORDER BY cols.column_name) AS COLUMN_NAME
             FROM all_constraints cons, all_cons_columns cols
             WHERE cols.table_name in (SELECT T.TABLE_NAME
                             FROM   ALL_TABLES T
@@ -127,6 +129,7 @@ BEGIN
             AND cons.constraint_type = 'P'
             AND cons.constraint_name = cols.constraint_name
             AND cons.owner = cols.owner
+            GROUP BY COLS.TABLE_NAME
             order by table_name; 
     BEGIN
         
