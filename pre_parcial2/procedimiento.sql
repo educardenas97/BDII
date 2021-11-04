@@ -1,0 +1,15 @@
+--Create a new Procedure
+
+-- Procedure definition
+
+CREATE PROCEDURE P_SELECCIONAR_CANDIDATOS (
+  ID_SUMARIO IN NUMBER) IS
+
+    V_CEDULA T_CEDULAS; 
+
+BEGIN
+    V_CEDULA := T_CEDULAS()
+    
+
+END P_SELECCIONAR_CANDIDATOS;
+/
