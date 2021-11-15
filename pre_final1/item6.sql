@@ -14,7 +14,7 @@ DECLARE
     var_id_proveedor NUMBER(4);
 
     TYPE articulo_proveedor IS RECORD(
-        id_articulo NUMBER(2),
+        id_articulo NUMBER(5),
         nombre VARCHAR2(5),
         cantidad_a_pedir NUMBER(4),
         id_proveedor NUMBER(4)
